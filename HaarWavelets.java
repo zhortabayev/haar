@@ -5,10 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class HaarWavelets {
-
-	public static int COLUMN;
-	public static int ROW;
 	
+	public static int SIZE;	
 	public static int [][] matrix;
 	
 	public static void main(String []args) {
@@ -31,36 +29,33 @@ public class HaarWavelets {
 			e1.printStackTrace();
 		}
 		
-		//ROW = ByteBuffer.wrap(bytes).getInt();
-		ROW = (int) Math.sqrt(bytes.length / 4 - 2);
-		COLUMN = ROW;
-
-		matrix = new int[ROW][COLUMN];
-			
+		SIZE = (int) Math.sqrt(bytes.length / 4 - 2);
+		matrix = new int[SIZE][SIZE];			
+		
 		int c = 0, r = 0;
 		for(int i = 8; i < bytes.length; i = i + 4) {
 			matrix[r][c] = ByteBuffer.wrap(bytes, i, 4).getInt();			
 			c++;			
-			if(c == COLUMN) {
+			if(c == SIZE) {
 				r++; c = 0;
 			}
 		}		
 		bytes = null;
-		System.gc();
 		
-		//first transform by row	
+		//first transform by row		
 		System.out.println("Thransforming by row...");
 		int counter = 0;		
-		while(counter < ROW){			
+		while(counter < SIZE){			
 			TransformationThread tt = new TransformationThread(matrix[counter]);
 			tt.start();	
-		}
-	
+			counter++;
+		}		
+		
 		while(Thread.activeCount() != 1 ) {}		
 		System.gc();
 		
 		System.out.println("Thransforming by column...");
-		for(int i = 0; i < COLUMN; i++) {
+		for(int i = 0; i < SIZE; i++) {
 			TransformationThread tt = new TransformationThread(i);
 			tt.start();
 		}
@@ -68,22 +63,26 @@ public class HaarWavelets {
 		while(Thread.activeCount() != 1 ) {}		
 		System.gc();		
 		
-		System.out.println("Writing to a file...");
-		try {			
-			FileOutputStream fos = new FileOutputStream(output, true);
-			fos.write(int2ByteArray(ROW));
-			fos.write(int2ByteArray(0));
-
-			for(int i = 0; i < ROW; i++) 
-				for(int j = 0; j < COLUMN; j++) 
-					fos.write(int2ByteArray(matrix[i][j]));
-			
+		System.out.println("Writing to a file...");		
+		ByteBuffer bb = ByteBuffer.allocate(SIZE * SIZE * 4 + 8);
+		bb.put(int2ByteArray(SIZE));
+		bb.put(int2ByteArray(0));
+		
+		for(int i = 0; i < SIZE; i++) 
+			for(int j = 0; j < SIZE; j++) 
+				bb.put(int2ByteArray(matrix[i][j]));			
+		byte[] result = bb.array();
+		
+		try {
+			FileOutputStream fos = new FileOutputStream(output);
+			fos.write(result);
 			fos.close();
-
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		
 		long stopTime = System.currentTimeMillis();
 	    long elapsedTime = stopTime - startTime;
 	    System.out.println("The time spent is:	 "  + elapsedTime / 1000 + "s");    

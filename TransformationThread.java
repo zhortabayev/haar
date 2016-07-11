@@ -1,3 +1,7 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Arrays;
 
 public class TransformationThread extends Thread {
 	
@@ -17,15 +21,21 @@ public class TransformationThread extends Thread {
 	public void run() {
 		// TODO Auto-generated method stub
 		if(array != null)
-			transform(array);
-		else transform2D(HaarWavelets.matrix, column);
+				transform(array);
+		else transform2D(column);
 		
 	}	
 	private void transform(int [] arr) {	
 
 		int half = arr.length/2;
 		
-		while(half > 0 && half%2 == 0) {
+		//FileWriter fileWriter = new FileWriter("checker.out");			
+		//BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);		
+		
+		//bufferedWriter.write("Length is: " + arr.length + Arrays.toString(arr) + "");
+		//bufferedWriter.newLine();
+
+		while(half > 1) {
 			int [] a = new int[half];
 			int [] d = new int[half];
 				
@@ -38,23 +48,26 @@ public class TransformationThread extends Thread {
 				arr[half + i] = d[i];
 			}			
 			half = half / 2;
-		}	
-	}
-	
-	private void transform2D(int [][] arr, int column) {		
-		int half = HaarWavelets.ROW/2;
+			
+			//bufferedWriter.write("Length is: " + arr.length + Arrays.toString(arr) + "");
+			//bufferedWriter.newLine();
+		}			
+		//bufferedWriter.close();
+	}	
+	private void transform2D(int column) {		
+		int half = HaarWavelets.SIZE/2;
 
-		while(half > 0 && half%2 == 0) {
+		while(half > 1) {
 			int [] a = new int[half];
 			int [] d = new int[half];
 			
 			for(int i = 0; i < half; i++) {	
-				a[i] = (arr[i * 2][column] + arr[i * 2 + 1][column])/2;
-				d[i] = (arr[i * 2][column] - arr[i * 2 + 1][column])/2;
+				a[i] = (HaarWavelets.matrix[i * 2][column] + HaarWavelets.matrix[i * 2 + 1][column])/2;
+				d[i] = (HaarWavelets.matrix[i * 2][column] - HaarWavelets.matrix[i * 2 + 1][column])/2;
 			}			
 			for(int i = 0; i < half; i++) {
-				arr[i][column] = a[i];
-				arr[half + i][column] = d[i];
+				HaarWavelets.matrix[i][column] = a[i];
+				HaarWavelets.matrix[half + i][column] = d[i];
 			}
 			half = half / 2;
 		}
